@@ -26,3 +26,7 @@ logs:
 .PHONY: clear
 clear:
 	docker system prune -af
+
+.PHONY: deploy
+deploy:
+	ssh setpilot@188.245.187.59 "cd /home/setpilot/agent && git pull && docker-compose down && docker-compose up -d --build && docker-compose logs --tail=100 bot"

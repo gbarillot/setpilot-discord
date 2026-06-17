@@ -57,8 +57,9 @@ class WriteDownBot(discord.Client):
             "content": message.content,
         }
 
+        await asyncio.to_thread(write_payload_safely, payload)
+
         try:
-            await asyncio.to_thread(write_payload, payload)
             sql = await self.llm.generate_sql(message.content, self.schema_summary)
             sql = validate_select_query(sql)
             rows = await self.db.fetch_rows(sql)
@@ -75,6 +76,13 @@ def write_payload(payload: dict) -> None:
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     with OUTPUT_FILE.open("a", encoding="utf-8") as file:
         file.write(json.dumps(payload, ensure_ascii=False) + "\n")
+
+
+def write_payload_safely(payload: dict) -> None:
+    try:
+        write_payload(payload)
+    except Exception as error:
+        print(f"Failed to write Discord message log: {error}", flush=True)
 
 
 async def send_status_reply(original_message: discord.Message) -> discord.Message | None:
