@@ -56,6 +56,7 @@ class WriteDownBot(discord.Client):
         }
 
         await asyncio.to_thread(write_payload, payload)
+        status_message = await message.reply("Je cherche...")
 
         try:
             sql = await self.llm.generate_sql(message.content, self.schema_summary)
@@ -64,10 +65,10 @@ class WriteDownBot(discord.Client):
             answer = await self.llm.generate_answer(message.content, sql, rows)
         except Exception as error:
             print(f"Failed to process message {message.id}: {error}")
-            await message.reply(ERROR_MESSAGE)
+            await status_message.edit(content=ERROR_MESSAGE)
             return
 
-        await message.reply(answer[:1900])
+        await status_message.edit(content=answer[:1900])
 
 
 def write_payload(payload: dict) -> None:
