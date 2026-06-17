@@ -1,0 +1,22 @@
+name: "agent"
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile-dev
+    command: sh -c "cd /home/python/app && tail -f /dev/null"
+    environment:
+      DOCKER_CLI_HINTS: "false"
+    volumes:
+      - ..:/home/python:cached
+    networks:
+      - setpilot-net
+
+volumes:
+  hermes-home:
+
+networks:
+  setpilot-net:
+    name: setpilot-net
+    external: true
