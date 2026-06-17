@@ -33,4 +33,4 @@ clear:
 
 .PHONY: deploy
 deploy:
-	ssh $(DEPLOY_HOST) "cd $(DEPLOY_DIR) && git fetch origin $(DEPLOY_BRANCH) && git checkout $(DEPLOY_BRANCH) && git pull --ff-only origin $(DEPLOY_BRANCH) && mkdir -p logs && if ! grep -q '^HOST_UID=' .env; then printf '\nHOST_UID=%s\n' \$$(id -u) >> .env; fi && if ! grep -q '^HOST_GID=' .env; then printf 'HOST_GID=%s\n' \$$(id -g) >> .env; fi && sudo chown -R \$$(id -u):\$$(id -g) logs && docker-compose down && docker-compose up -d --build && docker-compose logs --tail=100 bot"
+	ssh $(DEPLOY_HOST) "cd $(DEPLOY_DIR) && git fetch origin $(DEPLOY_BRANCH) && git checkout $(DEPLOY_BRANCH) && git pull --ff-only origin $(DEPLOY_BRANCH) && mkdir -p logs && chmod u+rwx logs && if ! grep -q '^HOST_UID=' .env; then printf '\nHOST_UID=%s\n' \$$(id -u) >> .env; fi && if ! grep -q '^HOST_GID=' .env; then printf 'HOST_GID=%s\n' \$$(id -g) >> .env; fi && docker-compose down && docker-compose up -d --build && docker-compose logs --tail=100 bot"
