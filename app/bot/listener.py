@@ -46,6 +46,8 @@ class WriteDownBot(discord.Client):
             await message.reply(REFUSAL_MESSAGE)
             return
 
+        status_message = await message.reply("Je cherche...")
+
         payload = {
             "received_at": datetime.now(UTC).isoformat(),
             "guild_id": message.guild.id if message.guild else None,
@@ -55,26 +57,32 @@ class WriteDownBot(discord.Client):
             "content": message.content,
         }
 
-        await asyncio.to_thread(write_payload, payload)
-        status_message = await message.reply("Je cherche...")
-
         try:
+            await asyncio.to_thread(write_payload, payload)
             sql = await self.llm.generate_sql(message.content, self.schema_summary)
             sql = validate_select_query(sql)
             rows = await self.db.fetch_rows(sql)
             answer = await self.llm.generate_answer(message.content, sql, rows)
         except Exception as error:
             print(f"Failed to process message {message.id}: {error}")
-            await status_message.edit(content=ERROR_MESSAGE)
+            await reply_or_edit(message, status_message, ERROR_MESSAGE)
             return
 
-        await status_message.edit(content=answer[:1900])
+        await reply_or_edit(message, status_message, answer[:1900])
 
 
 def write_payload(payload: dict) -> None:
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     with OUTPUT_FILE.open("a", encoding="utf-8") as file:
         file.write(json.dumps(payload, ensure_ascii=False) + "\n")
+
+
+async def reply_or_edit(original_message: discord.Message, status_message: discord.Message, content: str) -> None:
+    try:
+        await status_message.edit(content=content)
+    except Exception as error:
+        print(f"Failed to edit status message {status_message.id}: {error}")
+        await original_message.reply(content)
 
 
 def main() -> None:
