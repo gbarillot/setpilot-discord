@@ -8,7 +8,7 @@ ENV_FILE = Path("/home/python/.env")
 @dataclass(frozen=True)
 class Config:
     discord_token: str
-    discord_channel_ids: set[int]
+    discord_guild_ids: set[int]
     whitelist_words: set[str]
     openrouter_api_key: str
     openrouter_model: str
@@ -24,7 +24,7 @@ def load_config(path: Path = ENV_FILE) -> Config:
 
     return Config(
         discord_token=require(values, "DISCORD_TOKEN", path),
-        discord_channel_ids=parse_int_set(values.get("DISCORD_CHANNEL_IDS", "")),
+        discord_guild_ids=parse_int_set(values.get("DISCORD_GUILD_IDS", "")),
         whitelist_words=parse_str_set(values.get("WHITE_LIST_WORDS", "")),
         openrouter_api_key=require_any(values, ("OPENROUTER_API_KEY", "LLM_TOKEN"), path),
         openrouter_model=values.get("OPENROUTER_MODEL", "openrouter/auto"),

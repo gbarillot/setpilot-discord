@@ -31,7 +31,7 @@ class WriteDownBot(discord.Client):
 
     async def on_ready(self) -> None:
         print(f"Logged in as {self.user} ({self.user.id if self.user else 'unknown'})")
-        print(f"Allowed Discord channel IDs: {sorted(self.config.discord_channel_ids)}", flush=True)
+        print(f"Allowed Discord guild IDs: {sorted(self.config.discord_guild_ids)}", flush=True)
         print(f"Whitelist words: {sorted(self.config.whitelist_words)}", flush=True)
         print(f"Message log file: {OUTPUT_FILE}", flush=True)
 
@@ -42,15 +42,15 @@ class WriteDownBot(discord.Client):
         if self.user not in message.mentions:
             return
 
-        channel_ids = message_channel_ids(message)
+        guild_id = message.guild.id if message.guild else None
         print(
-            f"Received mention message={message.id} channel_ids={sorted(channel_ids)} author={message.author}",
+            f"Received mention message={message.id} guild_id={guild_id} channel_id={message.channel.id} author={message.author}",
             flush=True,
         )
 
-        if self.config.discord_channel_ids and not channel_ids & self.config.discord_channel_ids:
+        if self.config.discord_guild_ids and guild_id not in self.config.discord_guild_ids:
             print(
-                f"Ignoring message={message.id}: channel not allowed. allowed={sorted(self.config.discord_channel_ids)}",
+                f"Ignoring message={message.id}: guild not allowed. allowed={sorted(self.config.discord_guild_ids)}",
                 flush=True,
             )
             return
@@ -97,17 +97,6 @@ def write_payload_safely(payload: dict) -> None:
         write_payload(payload)
     except Exception as error:
         print(f"Failed to write Discord message log: {error}", flush=True)
-
-
-def message_channel_ids(message: discord.Message) -> set[int]:
-    channel_ids = {message.channel.id}
-    parent = getattr(message.channel, "parent", None)
-    if parent is not None:
-        channel_ids.add(parent.id)
-    parent_id = getattr(message.channel, "parent_id", None)
-    if parent_id is not None:
-        channel_ids.add(parent_id)
-    return channel_ids
 
 
 async def send_status_reply(original_message: discord.Message) -> discord.Message | None:
