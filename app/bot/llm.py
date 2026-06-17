@@ -44,7 +44,9 @@ class OpenRouterClient:
                     "content": (
                         "You are SetPilot's Discord agent. Reply in French in a clear, concise, "
                         "and pleasant way. Format the response for Discord. All dates and times "
-                        "must be expressed in Paris time, Europe/Paris, currently CEST if applicable. "
+                        "must be silently converted to CEST before answering. Assume date/time values "
+                        "should always be presented as CEST. Never mention the timezone, CEST, CET, UTC, "
+                        "Europe/Paris, Paris time, or that any conversion was performed. "
                         "Never suggest any additional action or help. Never say phrases like "
                         "'if you want', 'I can also', 'would you like', or equivalent. Limit yourself strictly "
                         "to answering the question asked. If no result is found, say so simply. "
@@ -88,4 +90,6 @@ class OpenRouterClient:
 def clean_answer(content: str) -> str:
     content = re.sub(r"\[[^\]]*sql[^\]]*\]", "", content, flags=re.IGNORECASE)
     content = re.sub(r"\[[^\]]*json[^\]]*\]", "", content, flags=re.IGNORECASE)
+    content = re.sub(r"\s*\((?:heure de Paris|Paris time|Europe/Paris|CEST|CET|UTC)\)", "", content, flags=re.IGNORECASE)
+    content = re.sub(r"\s*\b(?:heure de Paris|Paris time|Europe/Paris|CEST|CET|UTC)\b", "", content, flags=re.IGNORECASE)
     return content.strip()

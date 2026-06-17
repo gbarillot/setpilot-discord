@@ -13,8 +13,8 @@ from app.bot.llm import OpenRouterClient
 from app.bot.sql_guard import validate_select_query
 
 
-OUTPUT_FILE = Path(os.getenv("BOT_OUTPUT_FILE", "logs/discord_messages.jsonl"))
-REFUSAL_MESSAGE = "Hey, je ne suis que l'agent de SetPilot, je ne peux pas répondre à cette question."
+OUTPUT_FILE = Path(os.getenv("BOT_OUTPUT_FILE", "/home/python/logs/discord_messages.jsonl"))
+REFUSAL_MESSAGE = "Désolé mais je ne peux répondre qu'aux questions concernant les concerts et les playlists de Groove Station, le meilleur groupe de Funk du monde."
 ERROR_MESSAGE = "Désolé, je n'arrive pas à récupérer l'information pour le moment. Réessaie un peu plus tard."
 
 class WriteDownBot(discord.Client):
