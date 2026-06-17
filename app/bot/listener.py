@@ -46,7 +46,7 @@ class WriteDownBot(discord.Client):
             await message.reply(REFUSAL_MESSAGE)
             return
 
-        status_message = await message.reply("Je cherche...")
+        status_message = await send_status_reply(message)
 
         payload = {
             "received_at": datetime.now(UTC).isoformat(),
@@ -77,11 +77,33 @@ def write_payload(payload: dict) -> None:
         file.write(json.dumps(payload, ensure_ascii=False) + "\n")
 
 
-async def reply_or_edit(original_message: discord.Message, status_message: discord.Message, content: str) -> None:
+async def send_status_reply(original_message: discord.Message) -> discord.Message | None:
+    try:
+        status_message = await original_message.channel.send(
+            "Je cherche...",
+            reference=original_message,
+            mention_author=False,
+        )
+        print(f"Sent status message {status_message.id} for message {original_message.id}", flush=True)
+        return status_message
+    except Exception as error:
+        print(f"Failed to send status reply for message {original_message.id}: {error}", flush=True)
+        return None
+
+
+async def reply_or_edit(
+    original_message: discord.Message,
+    status_message: discord.Message | None,
+    content: str,
+) -> None:
+    if status_message is None:
+        await original_message.reply(content)
+        return
+
     try:
         await status_message.edit(content=content)
     except Exception as error:
-        print(f"Failed to edit status message {status_message.id}: {error}")
+        print(f"Failed to edit status message {status_message.id}: {error}", flush=True)
         await original_message.reply(content)
 
 
