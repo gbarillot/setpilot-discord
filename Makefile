@@ -1,4 +1,8 @@
 .PHONY: build
+DEPLOY_HOST ?= setpilot@188.245.187.59
+DEPLOY_DIR ?= /home/setpilot/agent
+DEPLOY_BRANCH ?= main
+
 build:
 	docker compose -f .devcontainer/compose.yaml -p agent build
 
@@ -29,4 +33,4 @@ clear:
 
 .PHONY: deploy
 deploy:
-	ssh setpilot@188.245.187.59 "cd /home/setpilot/agent && git pull && docker-compose down && docker-compose up -d --build && docker-compose logs --tail=100 bot"
+	ssh $(DEPLOY_HOST) "cd $(DEPLOY_DIR) && git fetch origin $(DEPLOY_BRANCH) && git checkout $(DEPLOY_BRANCH) && git pull --ff-only origin $(DEPLOY_BRANCH) && docker-compose down && docker-compose up -d --build && docker-compose logs --tail=100 bot"
