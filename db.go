@@ -13,7 +13,9 @@ import (
 const tablesSQL = `
 SELECT name
 FROM sqlite_master
-WHERE type = 'table' AND name LIKE 'setpilot_%'
+WHERE type = 'table'
+  AND name NOT LIKE 'sqlite_%'
+  AND name <> 'goose_db_version'
 ORDER BY name`
 
 type SQLiteDB struct {

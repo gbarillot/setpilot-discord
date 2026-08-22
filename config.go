@@ -7,7 +7,10 @@ import (
 	"strings"
 )
 
-const envFile = "/home/bot/.env"
+const (
+	containerEnvFile = "/home/bot/.env"
+	hostEnvFile      = "/home/setpilot/agent/.env"
+)
 
 type Config struct {
 	DiscordToken     string
@@ -50,6 +53,18 @@ func LoadConfig(path string) (Config, error) {
 		OpenRouterModel:  defaultValue(values["OPENROUTER_MODEL"], "openrouter/auto"),
 		SQLitePath:       sqlitePath,
 	}, nil
+}
+
+func findEnvFile() string {
+	if path := os.Getenv("SET_PILOT_ENV_FILE"); path != "" {
+		return path
+	}
+	for _, path := range []string{containerEnvFile, hostEnvFile, ".env"} {
+		if _, err := os.Stat(path); err == nil {
+			return path
+		}
+	}
+	return containerEnvFile
 }
 
 func readEnvFile(path string) (map[string]string, error) {

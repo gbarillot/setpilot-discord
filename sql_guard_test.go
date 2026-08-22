@@ -9,10 +9,10 @@ func TestValidateSelectQuery(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		{name: "adds limit", query: "SELECT * FROM setpilot_events", want: "SELECT * FROM setpilot_events\nLIMIT 50"},
-		{name: "keeps limit", query: "select * from setpilot_events limit 5", want: "select * from setpilot_events limit 5"},
+		{name: "adds limit", query: "SELECT * FROM bands", want: "SELECT * FROM bands\nLIMIT 50"},
+		{name: "keeps limit", query: "select * from bands limit 5", want: "select * from bands limit 5"},
 		{name: "strips fence", query: "```sql\nSELECT 1;\n```", want: "SELECT 1\nLIMIT 50"},
-		{name: "rejects write", query: "SELECT delete FROM setpilot_events", wantErr: true},
+		{name: "rejects write", query: "SELECT delete FROM bands", wantErr: true},
 		{name: "rejects multiple statements", query: "SELECT 1; SELECT 2", wantErr: true},
 	}
 	for _, test := range tests {

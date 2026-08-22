@@ -205,7 +205,8 @@ func mentionsUser(mentions []*discordgo.User, userID string) bool {
 }
 
 func main() {
-	config, err := LoadConfig(envFile)
+	configPath := findEnvFile()
+	config, err := LoadConfig(configPath)
 	if err != nil {
 		panic(err)
 	}
@@ -219,7 +220,7 @@ func main() {
 		config:     config,
 		db:         database,
 		llm:        NewOpenRouterClient(config),
-		outputFile: defaultValue(os.Getenv("BOT_OUTPUT_FILE"), "/home/bot/logs/discord_messages.jsonl"),
+		outputFile: defaultValue(os.Getenv("BOT_OUTPUT_FILE"), filepath.Join(filepath.Dir(configPath), "logs", "discord_messages.jsonl")),
 	}
 	if err := bot.setup(context.Background()); err != nil {
 		panic(fmt.Errorf("load database schema: %w", err))
