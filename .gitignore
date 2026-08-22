@@ -7,6 +7,7 @@
 coverage.out
 *.prof
 setpilot-agent-linux-amd64
+.bash_history
 
 # Go workspace files
 go.work
