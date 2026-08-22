@@ -1,9 +1,6 @@
-FROM python:3.12-bookworm
+FROM golang:1.27-bookworm
 
-ENV LANG=C.UTF-8 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PATH="/home/python/.local/bin:${PATH}"
+ENV LANG=C.UTF-8
 
 RUN apt-get update -qq && \
     apt-get install -y \
@@ -15,9 +12,7 @@ RUN apt-get update -qq && \
       vim \
       && rm -rf /var/lib/apt/lists/*
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
-
-ARG USERNAME=python
+ARG USERNAME=bot
 ARG USER_UID=1001
 ARG USER_GID=$USER_UID
 
@@ -26,10 +21,10 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
-WORKDIR /home/python/app
-COPY . /home/python/app
+WORKDIR /home/bot
+COPY . /home/bot
 
-RUN chown -R $USERNAME:$USERNAME /home/python
+RUN chown -R $USERNAME:$USERNAME /home/bot
 
 USER $USERNAME
 

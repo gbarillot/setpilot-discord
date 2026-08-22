@@ -1,27 +1,25 @@
-FROM python:3.12-slim
+FROM golang:1.27-alpine AS build
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY *.go ./
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /bot .
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    UV_LINK_MODE=copy
+FROM alpine:3.22
 
-ARG USERNAME=python
+ARG USERNAME=bot
 ARG USER_UID=1001
 ARG USER_GID=$USER_UID
 
-RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
+RUN addgroup -g $USER_GID $USERNAME \
+    && adduser -D -u $USER_UID -G $USERNAME $USERNAME \
+    && mkdir -p /home/bot/logs /home/bot/data \
+    && chown -R $USERNAME:$USERNAME /home/bot
 
-WORKDIR /home/python
-
-COPY pyproject.toml uv.lock ./
-COPY app ./app
-
-RUN uv sync --frozen --no-dev \
-    && mkdir -p /home/python/logs \
-    && chown -R $USERNAME:$USERNAME /home/python
+COPY --from=build /bot /home/bot/bot
 
 USER $USERNAME
+WORKDIR /home/bot
 
-CMD ["uv", "run", "bot"]
+CMD ["/home/bot/bot"]

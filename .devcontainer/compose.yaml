@@ -5,11 +5,12 @@ services:
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile-dev
-    command: sh -c "cd /home/python/app && tail -f /dev/null"
+    command: sh -c "cd /home/bot && tail -f /dev/null"
     environment:
       DOCKER_CLI_HINTS: "false"
     volumes:
-      - ..:/home/python:cached
+      - ..:/home/bot:cached
+      - ../../data:/home/bot/data:ro
     networks:
       - setpilot-net
 

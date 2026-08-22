@@ -1,10 +1,13 @@
-.PHONY: build
-DEPLOY_HOST ?= setpilot@188.245.187.59
-DEPLOY_DIR ?= /home/setpilot/agent
-DEPLOY_BRANCH ?= main
+RELEASE_TS := $(shell date +%Y%m%d%H%M%S)
+SERVER ?= setpilot@188.245.187.59
+REMOTE_AGENT_DIR ?= /home/setpilot/agent
+SERVICE_NAME ?= setpilot-agent
+AGENT_CONTAINER ?= agent-api-1
+AGENT_BINARY ?= setpilot-agent-linux-amd64
 
+.PHONY: build
 build:
-	docker compose -f .devcontainer/compose.yaml -p agent build
+	docker exec -it $(AGENT_CONTAINER) sh -c "cd /home/bot && GOOS=linux GOARCH=amd64 go build -o $(AGENT_BINARY)"
 
 .PHONY: start
 start:
@@ -19,18 +22,20 @@ restart:
 	docker compose -f .devcontainer/compose.yaml -p agent down
 	docker compose -f .devcontainer/compose.yaml -p agent up -d
 
-.PHONY: shell
-shell:
-	docker exec -it agent-api-1 bash
-
-.PHONY: logs
-logs:
-	docker compose -f .devcontainer/compose.yaml -p agent logs -f
-
 .PHONY: clear
 clear:
 	docker system prune -af
 
+.PHONY: test
+test:
+	docker exec -it $(AGENT_CONTAINER) sh -c "cd /home/bot && go test ./..."
+
+.PHONY: shell
+shell:
+	docker exec -it $(AGENT_CONTAINER) bash
+
 .PHONY: deploy
-deploy:
-	ssh $(DEPLOY_HOST) "cd $(DEPLOY_DIR) && git fetch origin $(DEPLOY_BRANCH) && git checkout $(DEPLOY_BRANCH) && git pull --ff-only origin $(DEPLOY_BRANCH) && mkdir -p logs && chmod u+rwx logs && if ! grep -q '^HOST_UID=' .env; then printf '\nHOST_UID=%s\n' \$$(id -u) >> .env; fi && if ! grep -q '^HOST_GID=' .env; then printf 'HOST_GID=%s\n' \$$(id -g) >> .env; fi && docker-compose down && docker-compose up -d --build && docker-compose logs --tail=100 bot"
+deploy: build
+	scp $(AGENT_BINARY) $(SERVER):$(REMOTE_AGENT_DIR)/releases/$(RELEASE_TS)
+	ssh $(SERVER) "ln -sfn $(REMOTE_AGENT_DIR)/releases/$(RELEASE_TS) $(REMOTE_AGENT_DIR)/agent"
+	ssh -t $(SERVER) "sudo systemctl restart $(SERVICE_NAME)"

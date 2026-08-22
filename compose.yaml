@@ -9,8 +9,9 @@ services:
     env_file:
       - .env
     volumes:
-      - ./.env:/home/python/.env:ro
-      - ./logs:/home/python/logs
+      - ./.env:/home/bot/.env:ro
+      - ../data:/home/bot/data:ro
+      - ./logs:/home/bot/logs
     networks:
       - setpilot-net
     restart: unless-stopped

@@ -1,19 +1,7 @@
-cd ..
 ls
+go run .
+ls -alh
+vim .env
 exit
-lq
-ls
-ls
-cd ..
-ks
-ls
-rm -rf test.txt 
-exit
-uv run bot
-uv run bot
-uv run bot
-uv run bot
-uv run bot
-uv run bot
-uv run bot
+go run .
 exit
