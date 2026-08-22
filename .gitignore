@@ -1,4 +1,25 @@
+# Go build and test output
+/bin/
+/dist/
+*.exe
+*.test
+*.out
+coverage.out
+*.prof
+setpilot-agent-linux-amd64
+
+# Go workspace files
+go.work
+go.work.sum
+
+# Local caches and tooling state
+.cache/
+.config/
+.viminfo
+.vscode/
+.idea/
+
+# Local configuration and runtime data
+.env
 logs/
 data/
-.env
-bot
