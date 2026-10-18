@@ -11,13 +11,3 @@ services:
     volumes:
       - ..:/home/bot:cached
       - ../../data:/home/bot/data:ro
-    networks:
-      - setpilot-net
-
-volumes:
-  hermes-home:
-
-networks:
-  setpilot-net:
-    name: setpilot-net
-    external: true
