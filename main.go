@@ -79,16 +79,24 @@ func (bot *Bot) onMessage(session *discordgo.Session, message *discordgo.Message
 
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
-	query, err := bot.llm.GenerateSQL(ctx, message.Content, bot.schema)
-	if err == nil {
-		query, err = ValidateSelectQuery(query)
-	}
 	var answer string
-	if err == nil {
-		var rows []map[string]any
-		rows, err = bot.db.FetchRows(ctx, query)
+	if isNextRehearsalParticipantsQuestion(message.Content) {
+		answer, err = bot.answerNextRehearsalParticipants(ctx, time.Now())
+	} else {
+		var query string
+		query, err = bot.llm.GenerateSQL(ctx, message.Content, bot.schema)
 		if err == nil {
-			answer, err = bot.llm.GenerateAnswer(ctx, message.Content, query, rows)
+			query, err = ValidateSelectQuery(query)
+		}
+		if err == nil {
+			err = validateGigTypeQuery(query, classifyGigQuestion(message.Content))
+		}
+		if err == nil {
+			var rows []map[string]any
+			rows, err = bot.db.FetchRows(ctx, query)
+			if err == nil {
+				answer, err = bot.llm.GenerateAnswer(ctx, message.Content, query, rows)
+			}
 		}
 	}
 	if err != nil {
@@ -176,6 +184,11 @@ func isWhitelistedMessage(content string, whitelist map[string]bool) bool {
 func wordVariants(word string) map[string]bool {
 	word = strings.ToLower(strings.TrimSpace(word))
 	variants := map[string]bool{word: true}
+	// The message tokenizer splits off apostrophes, so whitelist entries such
+	// as "répet'" must also match the token "répet".
+	if withoutApostrophe := strings.TrimRight(word, "'’"); withoutApostrophe != word {
+		variants[withoutApostrophe] = true
+	}
 	if len([]rune(word)) > 3 {
 		for _, suffix := range []string{"s", "x", "es"} {
 			if strings.HasSuffix(word, suffix) {

@@ -41,11 +41,16 @@ func NewOpenRouterClient(config Config) *OpenRouterClient {
 }
 
 func (client *OpenRouterClient) GenerateSQL(ctx context.Context, userMessage, schema string) (string, error) {
+	intent := classifyGigQuestion(userMessage)
 	content, err := client.chat(ctx, []chatMessage{
-		{Role: "system", Content: "You convert user questions into SQLite SQL queries. Return only an SQL query, with no markdown or explanation. The query should only target the band 'Groove Station', DO NOT query about other bands. The query must be read-only and start with SELECT or WITH."},
+		{Role: "system", Content: sqlSystemPrompt(intent)},
 		{Role: "user", Content: fmt.Sprintf("Available public schema:\n%s\n\nUser question:\n%s", schema, userMessage)},
 	})
 	return strings.TrimSpace(content), err
+}
+
+func sqlSystemPrompt(intent gigTypeIntent) string {
+	return fmt.Sprintf("You convert user questions into SQLite SQL queries. Return only an SQL query, with no markdown or explanation. The query should only target the band 'Groove Station', DO NOT query about other bands. The query must be read-only and start with SELECT or WITH. The gigs table contains both concerts (type = 'gig') and rehearsals (type = 'rehearsal'). For a question about gigs/concerts, filter gigs to type = 'gig'; for a question about rehearsals, filter gigs to type = 'rehearsal'. For a question explicitly asking about both, include both types and distinguish them in the result. For any other question that uses gigs, default to type = 'gig'. For this question, the requested gig type is %q: when querying gigs, apply that type filter explicitly (or include both types if requested).", intent)
 }
 
 func (client *OpenRouterClient) GenerateAnswer(ctx context.Context, userMessage, query string, rows []map[string]any) (string, error) {
