@@ -78,7 +78,7 @@ func TestNextRehearsalParticipants(t *testing.T) {
 		now  time.Time
 		want string
 	}{
-		{"upcoming", time.Date(2026, 7, 12, 12, 0, 0, 0, time.UTC), "Participants inscrits à la prochaine répétition : Alice Dupont, Bob, Charlie Martin."},
+		{"upcoming", time.Date(2026, 7, 12, 12, 0, 0, 0, time.UTC), "Participants inscrits à la prochaine répétition : Alice, Bob, Charlie."},
 		{"no signups", time.Date(2026, 7, 12, 15, 0, 0, 0, time.UTC), "Personne n'est inscrit à la prochaine répétition pour le moment."},
 		{"no upcoming", time.Date(2026, 7, 14, 12, 0, 0, 0, time.UTC), "Aucune répétition à venir n'est programmée."},
 	} {
@@ -152,7 +152,7 @@ func TestAnswerRehearsalParticipantsOnDate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if answer != "Participants inscrits à la répétition du 27 octobre 2026 : Alice Dupont." {
+	if answer != "Participants inscrits à la répétition du 27 octobre 2026 : Alice." {
 		t.Errorf("answer = %q", answer)
 	}
 	if details.path != "rehearsal participants by date" || details.participants != 1 {

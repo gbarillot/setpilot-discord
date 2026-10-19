@@ -38,7 +38,7 @@ func TestQuestionCLIWithoutDiscordOrEnv(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := "Participants inscrits à la prochaine répétition : Alice Dupont, Bob Martin.\n"; output.String() != want {
+	if want := "Participants inscrits à la prochaine répétition : Alice, Bob.\n"; output.String() != want {
 		t.Errorf("answer = %q, want %q", output.String(), want)
 	}
 	if !strings.Contains(diagnostics.String(), "Participants returned: 2") {

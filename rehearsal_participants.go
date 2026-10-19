@@ -137,7 +137,7 @@ func scanRehearsalParticipantRows(rows *sql.Rows, err error) (bool, []string, er
 			return false, nil, err
 		}
 		if firstName.Valid {
-			names = append(names, strings.TrimSpace(firstName.String+" "+lastName.String))
+			names = append(names, strings.TrimSpace(firstName.String))
 		}
 	}
 	return found, names, rows.Err()
