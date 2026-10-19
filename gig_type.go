@@ -27,7 +27,7 @@ func classifyGigQuestion(question string) gigTypeIntent {
 		if anyVariantInSet(variants, map[string]bool{
 			"répétition": true, "répetition": true, "repetition": true,
 			"répet": true, "repet": true, "rehearsal": true,
-		}) {
+		}) || strings.HasPrefix(word, "répét") || strings.HasPrefix(word, "répèt") || strings.HasPrefix(word, "répet") || strings.HasPrefix(word, "repet") {
 			rehearsal = true
 		}
 	}

@@ -18,6 +18,8 @@ func TestClassifyGigQuestion(t *testing.T) {
 		{"Quand est la repetition ?", rehearsalOnly},
 		{"C'est quand la répet' ?", rehearsalOnly},
 		{"C'est quand la repet' ?", rehearsalOnly},
+		{"Qui répète mardi ?", rehearsalOnly},
+		{"Qui est présent à la répét du 2026-10-27 ?", rehearsalOnly},
 		{"When is the next rehearsal?", rehearsalOnly},
 		{"Quels concerts et répétitions sont prévus ?", bothGigTypes},
 		{"Quelle est la prochaine date ?", gigOnly},

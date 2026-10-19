@@ -38,6 +38,10 @@ type questionDetails struct {
 }
 
 func (bot *Bot) answerQuestion(ctx context.Context, question string, now time.Time) (string, questionDetails, error) {
+	if date, ok := rehearsalParticipantsDate(question); ok {
+		answer, count, err := bot.answerRehearsalParticipantsOnDate(ctx, date)
+		return answer, questionDetails{path: "rehearsal participants by date", participants: count}, err
+	}
 	if isNextRehearsalParticipantsQuestion(question) {
 		answer, count, err := bot.answerNextRehearsalParticipantsWithCount(ctx, now)
 		return answer, questionDetails{path: "next rehearsal participants", participants: count}, err
