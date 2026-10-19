@@ -75,15 +75,20 @@ func (database *SQLiteDB) nextRehearsalParticipants(ctx context.Context, now tim
 }
 
 func (bot *Bot) answerNextRehearsalParticipants(ctx context.Context, now time.Time) (string, error) {
+	answer, _, err := bot.answerNextRehearsalParticipantsWithCount(ctx, now)
+	return answer, err
+}
+
+func (bot *Bot) answerNextRehearsalParticipantsWithCount(ctx context.Context, now time.Time) (string, int, error) {
 	found, names, err := bot.db.nextRehearsalParticipants(ctx, now)
 	if err != nil {
-		return "", fmt.Errorf("find next rehearsal participants: %w", err)
+		return "", 0, fmt.Errorf("find next rehearsal participants: %w", err)
 	}
 	if !found {
-		return "Aucune répétition à venir n'est programmée.", nil
+		return "Aucune répétition à venir n'est programmée.", 0, nil
 	}
 	if len(names) == 0 {
-		return "Personne n'est inscrit à la prochaine répétition pour le moment.", nil
+		return "Personne n'est inscrit à la prochaine répétition pour le moment.", 0, nil
 	}
-	return "Participants inscrits à la prochaine répétition : " + strings.Join(names, ", ") + ".", nil
+	return "Participants inscrits à la prochaine répétition : " + strings.Join(names, ", ") + ".", len(names), nil
 }

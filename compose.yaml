@@ -10,7 +10,7 @@ services:
       - .env
     volumes:
       - ./.env:/home/bot/.env:ro
-      - ../data:/home/bot/data:ro
+      - ../fiber:/home/bot/fiber:ro
       - ./logs:/home/bot/logs
     networks:
       - setpilot-net

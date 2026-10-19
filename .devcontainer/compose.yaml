@@ -10,4 +10,4 @@ services:
       DOCKER_CLI_HINTS: "false"
     volumes:
       - ..:/home/bot:cached
-      - ../../data:/home/bot/data:ro
+      - ../../fiber:/home/bot/fiber:ro

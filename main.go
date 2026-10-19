@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -27,6 +28,37 @@ type Bot struct {
 	schema      string
 	outputFile  string
 	outputMutex sync.Mutex
+}
+
+type questionDetails struct {
+	path         string
+	query        string
+	rows         int
+	participants int
+}
+
+func (bot *Bot) answerQuestion(ctx context.Context, question string, now time.Time) (string, questionDetails, error) {
+	if isNextRehearsalParticipantsQuestion(question) {
+		answer, count, err := bot.answerNextRehearsalParticipantsWithCount(ctx, now)
+		return answer, questionDetails{path: "next rehearsal participants", participants: count}, err
+	}
+	query, err := bot.llm.GenerateSQL(ctx, question, bot.schema)
+	if err != nil {
+		return "", questionDetails{path: "LLM"}, err
+	}
+	query, err = ValidateSelectQuery(query)
+	if err == nil {
+		err = validateGigTypeQuery(query, classifyGigQuestion(question))
+	}
+	if err != nil {
+		return "", questionDetails{path: "LLM", query: query}, err
+	}
+	rows, err := bot.db.FetchRows(ctx, query)
+	if err != nil {
+		return "", questionDetails{path: "LLM", query: query}, err
+	}
+	answer, err := bot.llm.GenerateAnswer(ctx, question, query, rows)
+	return answer, questionDetails{path: "LLM", query: query, rows: len(rows)}, err
 }
 
 func (bot *Bot) setup(ctx context.Context) error {
@@ -79,26 +111,7 @@ func (bot *Bot) onMessage(session *discordgo.Session, message *discordgo.Message
 
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
-	var answer string
-	if isNextRehearsalParticipantsQuestion(message.Content) {
-		answer, err = bot.answerNextRehearsalParticipants(ctx, time.Now())
-	} else {
-		var query string
-		query, err = bot.llm.GenerateSQL(ctx, message.Content, bot.schema)
-		if err == nil {
-			query, err = ValidateSelectQuery(query)
-		}
-		if err == nil {
-			err = validateGigTypeQuery(query, classifyGigQuestion(message.Content))
-		}
-		if err == nil {
-			var rows []map[string]any
-			rows, err = bot.db.FetchRows(ctx, query)
-			if err == nil {
-				answer, err = bot.llm.GenerateAnswer(ctx, message.Content, query, rows)
-			}
-		}
-	}
+	answer, _, err := bot.answerQuestion(ctx, message.Content, time.Now())
 	if err != nil {
 		fmt.Printf("Failed to process message %s: %v\n", message.ID, err)
 		bot.replyOrEdit(session, message, status, errorMessage)
@@ -218,6 +231,22 @@ func mentionsUser(mentions []*discordgo.User, userID string) bool {
 }
 
 func main() {
+	question := flag.String("question", "", "answer one question without connecting to Discord")
+	dbPath := flag.String("db", "", "SQLite database path for -question (defaults to SQLITE_PATH in .env)")
+	debug := flag.Bool("debug", false, "show question path and row counts in CLI mode")
+	nowFlag := flag.String("now", "", "override current time in CLI mode (RFC3339)")
+	flag.Parse()
+	if *question != "" {
+		if err := runQuestionCLI(*question, *dbPath, *debug, *nowFlag, os.Stdout, os.Stderr); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
+	if *dbPath != "" || *debug || *nowFlag != "" || flag.NArg() != 0 {
+		fmt.Fprintln(os.Stderr, "-db, -debug and -now require -question; pass the question with -question")
+		os.Exit(2)
+	}
 	configPath := findEnvFile()
 	config, err := LoadConfig(configPath)
 	if err != nil {
