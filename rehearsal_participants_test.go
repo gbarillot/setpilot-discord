@@ -14,6 +14,7 @@ func TestNextRehearsalParticipantsQuestion(t *testing.T) {
 		question string
 		want     bool
 	}{
+		{"Quels sont les présents à la prochaine répet?", true},
 		{"Qui sera là à la prochaine répet ?", true},
 		{"Qui vient à la prochaine répétition ?", true},
 		{"Quels participants à la prochaine répetition ?", true},
@@ -51,10 +52,10 @@ func TestNextRehearsalParticipants(t *testing.T) {
 			('unscheduled', 'groove', 'rehearsal', NULL),
 			('next', 'groove', 'rehearsal', '2026-07-12T14:00:00Z'),
 			('later', 'groove', 'rehearsal', '2026-07-13T14:00:00Z');
-		INSERT INTO users VALUES ('alice', 'Alice', 'Dupont'), ('bob', 'Bob', NULL), ('outsider', 'Outsider', 'Other');
-		INSERT INTO bands_users VALUES ('groove', 'alice'), ('groove', 'bob');
+		INSERT INTO users VALUES ('alice', 'Alice', 'Dupont'), ('bob', 'Bob', NULL), ('charlie', 'Charlie', 'Martin'), ('outsider', 'Outsider', 'Other');
+		INSERT INTO bands_users VALUES ('groove', 'alice'), ('groove', 'bob'), ('groove', 'charlie');
 		INSERT INTO participants VALUES
-			('next', 'bob'), ('next', 'alice'), ('next', 'outsider'),
+			('next', 'bob'), ('next', 'alice'), ('next', 'charlie'), ('next', 'outsider'),
 			('later', 'outsider'), ('old', 'outsider'), ('concert', 'outsider');
 	`)
 	if err != nil {
@@ -76,7 +77,7 @@ func TestNextRehearsalParticipants(t *testing.T) {
 		now  time.Time
 		want string
 	}{
-		{"upcoming", time.Date(2026, 7, 12, 12, 0, 0, 0, time.UTC), "Participants inscrits à la prochaine répétition : Alice Dupont, Bob."},
+		{"upcoming", time.Date(2026, 7, 12, 12, 0, 0, 0, time.UTC), "Participants inscrits à la prochaine répétition : Alice Dupont, Bob, Charlie Martin."},
 		{"no signups", time.Date(2026, 7, 12, 15, 0, 0, 0, time.UTC), "Personne n'est inscrit à la prochaine répétition pour le moment."},
 		{"no upcoming", time.Date(2026, 7, 14, 12, 0, 0, 0, time.UTC), "Aucune répétition à venir n'est programmée."},
 	} {
